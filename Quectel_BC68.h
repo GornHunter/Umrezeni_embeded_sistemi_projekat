@@ -32,7 +32,7 @@ bool BC68_rx_UDP(char* msg, int16_t rx_bytes, char socket);
 
 //dodato - TCP related functions
 bool connect_TCP(char socket, char SERVER_IP[], uint16_t sending_port);
-int16_t BC68_tx_TCP(char socket, uint16_t length, uint16_t* payload);
+int16_t BC68_tx_TCP(char socket, uint16_t length, uint8_t* payload);
 bool BC68_rx_TCP(char* msg, int16_t rx_bytes, char socket);
 
 #endif /* QUECTEL_BC68_H_ */

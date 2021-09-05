@@ -205,8 +205,7 @@ bool connect_TCP(char socket, char SERVER_IP[], uint16_t listening_port){
 	
 	if (!getBC68response(cmd, "OK", response, 3000))
 	{
-		if (!getBC68response(cmd, "OK", response, 3000))
-			return false;
+		return false;
 	}
 	
 	return true;
@@ -330,11 +329,11 @@ int16_t BC68_tx_UDP(char SERVER_IP[], uint16_t sending_port, uint8_t* payload, u
 }
 
 //TCP metoda za slanje podataka
-int16_t BC68_tx_TCP(char socket, uint16_t length, uint16_t* payload){
+int16_t BC68_tx_TCP(char socket, uint16_t length, uint8_t* payload){
 	char cmd[128], response[128], msg2hex[3], nsonmi[24];
 	uint8_t msg_index = 0, hi, lo;
 	
-	sprintf(cmd, "AT+NSOSD=%c,%d", socket, length);
+	sprintf(cmd, "AT+NSOSD=%c,%d,", socket, length);
 	
 	printDebugString(cmd);
 	nbiotUARTputString(cmd);
@@ -469,6 +468,11 @@ bool BC68_rx_UDP(char* msg, int16_t rx_bytes, char socket)
 	}
 	
 	return true;
+}
+
+//TCP metoda za prijem podataka
+bool BC68_rx_TCP(char* msg, int16_t rx_bytes, char socket){
+	BC68_rx_UDP(msg, rx_bytes, socket);
 }
 
 

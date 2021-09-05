@@ -86,8 +86,10 @@ int main(void)
 	
 	setLEDfreq(FREQ_1HZ);
 	
-	char socket = BC68_openSocket(1, TCP);
-	if(connect_TCP(socket, "199.247.17.15", 50051)){
+	delay(3000);
+	
+	//char socket = BC68_openSocket(1, TCP);
+	//if(connect_TCP(socket, "199.247.17.15", 50051)){
 			
 		while (1)
 		{
@@ -110,18 +112,24 @@ int main(void)
 			//sprintf(payload, "{\"temp\":\"%d.%d\", \"vlaznost\":\"%d.%d\", \"pritisak\":\"%d.%d\", \"svetlo\":\"%ld\"}", shtc3_temp/100, shtc3_temp%100, shtc3_hum/100, shtc3_hum%100, bmp280_pres / 100, bmp280_pres % 100, lum);
 			
 			//char socket = BC68_openSocket(1, UDP);
+			char socket = BC68_openSocket(1, TCP);
+			if(connect_TCP(socket, "199.247.17.15", 50051)){
+				int16_t rxBytes = BC68_tx_TCP(socket, strlen(payload), payload);
+				BC68_rx_TCP(response, rxBytes, socket);
+			}
+			
+			BC68_closeSocket(socket);
+
 			//int16_t rxBytes = BC68_tx_UDP("199.247.17.15", 50051, payload, strlen(payload), socket);
 			//BC68_rx_UDP(response, rxBytes, socket);
 			//BC68_closeSocket(socket);
-			
-			int16_t rxBytes = BC68_tx_TCP(socket, strlen(payload), payload);
-			
-			//sprintf(str, "Server response -> %s\r\n", response);
-			//usbUARTputString(str);
-			//
+
+
+			sprintf(str, "Server response -> %s\r\n", response);
+			usbUARTputString(str);
 			
 			delay(1000);
 		}
-	}
+	//}
 }
 
