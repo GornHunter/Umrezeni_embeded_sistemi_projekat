@@ -1,5 +1,7 @@
 #include <atmel_start.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "ftn_vip_lib/usbUART.h"
 #include "ftn_vip_lib/debugUART.h"
 #include "ftn_vip_lib/nbiotUART.h"
@@ -54,7 +56,7 @@ void accelTest(void)
 	}
 }
 
-int main(void)
+int main()
 {
 	/* Initializes MCU, drivers and middleware */
 	atmel_start_init();
@@ -86,50 +88,44 @@ int main(void)
 	
 	setLEDfreq(FREQ_1HZ);
 	
-	delay(3000);
 	
-	//char socket = BC68_openSocket(1, TCP);
-	//if(connect_TCP(socket, "199.247.17.15", 50051)){
-			
-		while (1)
-		{
-			while (gpio_get_pin_level(BUTTON));
-			
-			char payload[256], response[256];
-			sprintf(payload, "Hello world!\r\n");
-			
-			/*SHTC3_update();
-			uint32_t shtc3_hum = SHTC3_raw2Percent() * 100;
-			uint32_t shtc3_temp = SHTC3_raw2DegC() * 100;
-			
-			int32_t bmp280_temp, bmp280_pres;
-			bmp280_measure(&bmp280_temp, &bmp280_pres);
-			
-			uint32_t lum = BH1750FVI_GetLightIntensity();*/
-			
-			//sprintf(payload, "4VdIUYN0EnIGGXGErqAh57iN\nmaker:4SeExueY5Go5cK7wnnPB0NALctn2XPYIUevFJIDC\n{\"temp\":{\"value\":%d.%d},\"vlaznost\":{\"value\":%d.%d},\"pritisak\":{\"value\":%d.%d},\"svetlo\":{\"value\":%ld}}", shtc3_temp/100, shtc3_temp%100, shtc3_hum/100, shtc3_hum%100, bmp280_pres / 100, bmp280_pres % 100, lum);
-			//sprintf(payload, "{\"temp\":{\"value\":%d.%d},\"vlaznost\":{\"value\":%d.%d},\"pritisak\":{\"value\":%d.%d},\"svetlo\":{\"value\":%ld}}", shtc3_temp/100, shtc3_temp%100, shtc3_hum/100, shtc3_hum%100, bmp280_pres / 100, bmp280_pres % 100, lum);
-			//sprintf(payload, "{\"temp\":\"%d.%d\", \"vlaznost\":\"%d.%d\", \"pritisak\":\"%d.%d\", \"svetlo\":\"%ld\"}", shtc3_temp/100, shtc3_temp%100, shtc3_hum/100, shtc3_hum%100, bmp280_pres / 100, bmp280_pres % 100, lum);
-			
-			//char socket = BC68_openSocket(1, UDP);
-			char socket = BC68_openSocket(1, TCP);
-			if(connect_TCP(socket, "199.247.17.15", 50051)){
-				int16_t rxBytes = BC68_tx_TCP(socket, strlen(payload), payload);
-				BC68_rx_TCP(response, rxBytes, socket);
-			}
-			
-			BC68_closeSocket(socket);
-
-			//int16_t rxBytes = BC68_tx_UDP("199.247.17.15", 50051, payload, strlen(payload), socket);
-			//BC68_rx_UDP(response, rxBytes, socket);
-			//BC68_closeSocket(socket);
-
-
-			sprintf(str, "Server response -> %s\r\n", response);
-			usbUARTputString(str);
-			
+	while (1)
+	{
+		while (gpio_get_pin_level(BUTTON));
+		
+		char payload[256], response[256], data[256];
+		
+		SHTC3_update();
+		uint32_t shtc3_hum = SHTC3_raw2Percent() * 100;
+		uint32_t shtc3_temp = SHTC3_raw2DegC() * 100;
+		
+		int32_t bmp280_temp, bmp280_pres;
+		bmp280_measure(&bmp280_temp, &bmp280_pres);
+		
+		uint32_t lum = BH1750FVI_GetLightIntensity();
+		
+		sprintf(data, "{\"temperatura\":\"%d.%d\", \"vlaznost\":\"%d.%d\", \"pritisak\":\"%d.%d\", \"osvetljenje\":\"%ld\"}", shtc3_temp/100, shtc3_temp%100, shtc3_hum/100, shtc3_hum%100, bmp280_pres / 100, bmp280_pres % 100, lum);
+		sprintf(payload, "POST /tcp_server.py HTTP/1.1\r\nHost: 199.247.17.15\r\nContent-Type: application/json\r\nContent-Length: %d\r\n\r\n%s", strlen(data), data);
+		
+		
+		char socket = BC68_openSocket(1, TCP);
+		
+		if(connect_TCP(socket, "199.247.17.15", 50051)){
 			delay(1000);
+			int16_t rxBytes = BC68_tx_TCP(socket, strlen(payload), payload);
+			BC68_rx_TCP(response, rxBytes, socket);
 		}
-	//}
+
+		BC68_closeSocket(socket);
+
+		char* res = strtok(response, "\n");
+		res = strtok(NULL, "\n");
+		res = strtok(NULL, "\n");
+		res = strtok(NULL, "\n");
+		sprintf(str, "Server response -> %s\r\n", res);
+		usbUARTputString(str);
+		
+		delay(1000);
+	}
 }
 

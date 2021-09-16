@@ -203,17 +203,12 @@ bool connect_TCP(char socket, char SERVER_IP[], uint16_t listening_port){
 	
 	sprintf(cmd, "AT+NSOCO=%c,%s,%d\r\n", socket, SERVER_IP, listening_port);
 	
-	if (!getBC68response(cmd, "OK", response, 3000))
-	{
-		return false;
-	}
-	
-	return true;
+	return getBC68response(cmd, "OK", response, 3000);
 }
 
 char BC68_openSocket(uint16_t listening_port, uint8_t protocol)
 {
- 	char cmd[64], response[64];
+ 	char cmd[64], response[64], str[64];
  	char socket;
 	 
 	getBC68response("AT+CSQ\r\n", "OK", response, 3000);
@@ -225,8 +220,12 @@ char BC68_openSocket(uint16_t listening_port, uint8_t protocol)
 	
  	if (!getBC68response(cmd, "OK", response, 3000))
  	{
- 		if (!getBC68response(cmd, "OK", response, 3000))
- 			return -1;
+		sprintf(cmd, "AT+NSOCR=STREAM,6,2,1\r\n");
+ 		if (!getBC68response(cmd, "OK", response, 3000)){
+			 sprintf(str, "metoda1 - response: %s\n", response);
+			 usbUARTputString(str);
+			 return -1;
+		 }
 	}
 	uint8_t i = 0;
 	uint8_t len = strlen(response);
@@ -234,12 +233,18 @@ char BC68_openSocket(uint16_t listening_port, uint8_t protocol)
 	while(!(response[i] >= '0' && response[i] < '7') && (i < len))
 		i++;
 		
-	if (i==len)
+	if (i==len){
+		sprintf(str, "metoda2 - response: %s, i: %d, len: %d\n", response, i, len);
+		usbUARTputString(str);
 		return -1;
+	}
 	
 	socket = response[i];
-	if (!(socket >= '0' && socket < '7'))
+	if (!(socket >= '0' && socket < '7')){
+		sprintf(str, "metoda3 - response: %s, i: %d, len: %d\n", response, i, len);
+		usbUARTputString(str);
 		return -1;
+	}
 	
 	sprintf(cmd, "Socket #%c\r\n", socket);
 	printDebugString(cmd);
